@@ -1,0 +1,7 @@
+---
+- name: Install Docker on Jenkins and App hosts
+  hosts: tag_Jenkins,tag_app
+  become: true
+  tasks:
+    roles:
+      - docker_install
