@@ -1,7 +1,9 @@
 ---
 # tasks file for docker_install
----
-# Tasks for installing Docker on Ubuntu
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
 
 - name: Install Docker pre-requisites
   apt:
@@ -35,9 +37,9 @@
     state: started
     enabled: yes
 - name: Verify Docker Installation
-    command: docker --version
-    register: docker_version_result
-    changed_when: false
+  command: docker --version
+  register: docker_version_result
+  changed_when: false
 - name: Display Docker Version
   debug:
     msg: "Docker Version {{ docker_version_result.stdout }}"
