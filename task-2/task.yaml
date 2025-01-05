@@ -1,0 +1,28 @@
+---
+# tasks file for docker
+- name: Install docker pre-requisites
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - curl
+    state: present
+    update_cache: yes
+- name: Add Docker GPG key for debian system
+  apt_key:
+    url: "{{ docker_gpg_url}}"
+    state: present
+- name: Add Docker repository
+  apt:
+    name: "{{ docker_repo_url }}"
+    state:  present
+- name: Install docker
+  apt:
+    name: "{{ docker_package_name }}"
+    state: present
+- name: Start andEnable Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
