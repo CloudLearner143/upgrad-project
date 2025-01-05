@@ -1,4 +1,4 @@
 ---
 # vars file for docker_install
 docker_gpg_url: https://download.docker.com/linux/ubuntu/gpg
-docker_repo_url: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable
+docker_repo_url: deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable

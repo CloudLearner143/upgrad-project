@@ -1,9 +1,24 @@
 ---
 # tasks file for docker_install
 
+- name: Remove old Docker GPG key and repository list
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/keyrings/docker.asc
+    - /etc/apt/sources.list.d/docker.list
+    - /etc/systemd/system/docker.service
+    - /etc/systemd/system/docker.socket
+    - /etc/docker
+    - /var/lib/docker
+    - /etc/apt/trusted.gpg.d/docker.gpg
+  become: true  # Run with elevated privileges to ensure successful removal
+
 - name: Update APT cache
   apt:
     update_cache: yes
+  become: true
 
 - name: Install Docker pre-requisites
   apt:
@@ -16,30 +31,46 @@
     - software-properties-common
     - curl
 
-- name: Add Docker GPG key for Ubuntu system
-  apt_key:
+#- name: Add Docker GPG key for Ubuntu system
+#  apt_key:
+#    url: "{{ docker_gpg_url }}"
+#    state: present
+#
+
+- name: Add Docker GPG key
+  get_url:
     url: "{{ docker_gpg_url }}"
-    state: present
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  become: true
 
 - name: Add Docker repository
   apt_repository:
     repo: "{{ docker_repo_url }}"
     state: present
+    filename: docker
+    update_cache: yes
+  become: true
 
 - name: Install Docker
   apt:
     name: "{{ docker_package_name }}"
     state: present
+  become: true
 
 - name: Start and Enable Docker service
   service:
     name: docker
     state: started
     enabled: yes
+  become: true
+
 - name: Verify Docker Installation
   command: docker --version
   register: docker_version_result
   changed_when: false
+  become: true
+
 - name: Display Docker Version
   debug:
     msg: "Docker Version {{ docker_version_result.stdout }}"
