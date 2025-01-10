@@ -19,6 +19,12 @@ resource "aws_lb_target_group" "jenkins" {
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.upgrad-vpc.id
+  
+  health_check {
+    path = "/jenkins"
+    port = 8080
+    protocol = "HTTP"
+  }
 }
 
 resource "aws_lb_target_group" "app" {
@@ -47,7 +53,7 @@ resource "aws_lb_listener" "app_lb_listener" {
 resource "aws_lb_listener_rule" "redirect-to-jenkins" {
   count        = length(aws_lb_listener.app_lb_listener)
   listener_arn = aws_lb_listener.app_lb_listener[count.index].arn
-  priority     = 100
+  priority     = 1
 
   action {
     type             = "forward"
@@ -56,7 +62,7 @@ resource "aws_lb_listener_rule" "redirect-to-jenkins" {
 
   condition {
     path_pattern {
-      values = ["/jenkins", "/jenkins/*"]
+      values = ["/jenkins*"]
     }
   }
 }
@@ -64,7 +70,7 @@ resource "aws_lb_listener_rule" "redirect-to-jenkins" {
 resource "aws_lb_listener_rule" "redirect-to-app" {
   count        = length(aws_lb_listener.app_lb_listener)
   listener_arn = aws_lb_listener.app_lb_listener[count.index].arn
-  priority     = 99
+  priority     = 2
 
   action {
     type             = "forward"
@@ -73,7 +79,7 @@ resource "aws_lb_listener_rule" "redirect-to-app" {
 
   condition {
     path_pattern {
-      values = ["/app", "/app/*"]
+      values = ["/app", "/app*"]
     }
   }
 }

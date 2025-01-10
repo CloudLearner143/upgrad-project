@@ -9,6 +9,11 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "Bastion"
   }
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 15
+    volume_type = "gp3"
+  }
 }
 
 resource "aws_instance" "jenkins" {
@@ -21,6 +26,11 @@ resource "aws_instance" "jenkins" {
   tags = {
     Name = "Jenkins"
   }
+    ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 15
+    volume_type = "gp3"
+  }
 }
 
 resource "aws_instance" "app" {
@@ -32,5 +42,10 @@ resource "aws_instance" "app" {
   count           = 1
   tags = {
     Name = "app"
+  }
+    ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 15
+    volume_type = "gp3"
   }
 }

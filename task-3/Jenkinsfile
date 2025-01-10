@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+
+    environment {
+        ECR_REPOSITORY = 'node-app-repo'
+        IMAGE_NAME = 'movie-client'
+        ECR_REGISTRY = "074190712872.dkr.ecr.us-east-1.amazonaws.com"
+        IMAGE_TAG = "latest"
+        APP_HOST = '10.10.3.84'
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                script {
+                    deleteDir()  // Clean workspace
+                }
+                script {
+                    git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/CloudLearner143/project-task3.git'
+                }
+            }
+        }
+
+        stage('Docker Build and Push to ECR') {
+            steps {
+                script {
+                    sh """
+                    cd client/
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to App Host') {
+            steps {
+                sshagent(['node-app-key']) {
+                    script {
+                        // SSH to the app host and perform operations
+                        sh """
+                        # SSH into the app host as root and perform necessary actions
+                        ssh -o StrictHostKeyChecking=no root@${APP_HOST} <<EOF
+                            # Stop all running containers
+                            docker ps -q | xargs -r docker stop
+
+                            # Remove all stopped containers
+                            docker ps -a -q | xargs -r docker rm
+
+                            # Remove all images (you can be more selective if needed)
+                            docker images -q | xargs -r docker rmi -f
+
+                            # Pull the latest image from ECR
+                            docker pull ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+
+                            # Run the new container
+                            docker run -d -p 8000:8000 --name ${IMAGE_NAME} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+
+                            # List running containers (for debug purposes)
+                            docker ps
+
+                            echo 'Deployment completed!'
+                        EOF
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Job completed successfully'
+        }
+        failure {
+            echo 'Job failed'
+        }
+    }
+}

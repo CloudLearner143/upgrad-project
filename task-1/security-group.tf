@@ -47,7 +47,8 @@ resource "aws_security_group" "public-sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["${data.http.self_ip.body}/32"]
+    cidr_blocks = ["0.0.0.0/0"]
+    # cidr_blocks = ["${data.http.self_ip.body}/32"]
   }
 
   egress {
